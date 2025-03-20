@@ -12,12 +12,36 @@ const index = async (req, res) => {
     const query = req.query
     query.deleted = false;
 
-    let allData = await Contact.find(query).populate({
-        path: 'createBy',
-        match: { deleted: false } // Populate only if createBy.deleted is false
-    }).exec()
+    //TO Fix undefined undefined on UI
+    const contacts = await Contact.aggregate([
+        { $match: query },
+        {
+          $project: {
+            _id: 1,
+            phoneNumber: 1,
+            fullName: 1,
+            email: 1,
+            quotes: 1,
+            createBy: 1,
+            updatedDate: 1,
+            createdDate: 1,
+            deleted: 1,
+            firstName: {
+              $arrayElemAt: [{ $split: ['$fullName', ' '] }, 0], // First part of fullName
+            },
+            lastName: {
+                $arrayElemAt: [{ $split: ['$fullName', ' '] }, 1],
+            },
+          },
+        },
+      ]);      
 
-    const result = allData.filter(item => item.createBy !== null);
+    // let allData = await Contact.find(query).populate({
+    //     path: 'createBy',
+    //     match: { deleted: false } // Populate only if createBy.deleted is false
+    // }).exec()
+
+    const result = contacts.filter(item => item.createBy !== null);
 
     try {
         res.send(result)

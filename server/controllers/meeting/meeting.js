@@ -41,10 +41,8 @@ const index = async (req, res) => {
   logger.info('index route called for meeting');
   try {
     const query = req.query;
-    logger.info(req.user);
     query.deleted = false;
     const user = await User.findById(req.user.userId);
-    logger.info(user);
     if (user?.role !== "superAdmin") {
       delete query.createBy
       query.$or = [{ createBy: new mongoose.Types.ObjectId(req.user.userId) }, { attendes: { $elemMatch : new mongoose.Types.ObjectId(req.user.userId) } }, { attendesLead: { $elemMatch : new mongoose.Types.ObjectId(req.user.userId) } }];
@@ -72,12 +70,10 @@ const index = async (req, res) => {
             from: 'Leads',
             localField: 'attendesLead',
             foreignField: '_id',
-            as: 'Lead'
+            as: 'attendesLead'
         }
       },
-      { $unwind: { path: '$contact', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$users', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$Lead', preserveNullAndEmptyArrays: true } },
       {
         $addFields: {
           createdByName: '$users.username',
@@ -124,9 +120,7 @@ const view = async (req, res) => {
             as: 'attendesLead'
         }
       },
-     // { $unwind: { path: '$attendes', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$createBy', preserveNullAndEmptyArrays: true } },
-     // { $unwind: { path: '$attendesLeads', preserveNullAndEmptyArrays: true } },
       { $project: 
         { 
           agenda: 1,
@@ -144,12 +138,12 @@ const view = async (req, res) => {
                 else: {
                   $map: {
                     input: '$attendes',
-                    as: 'att',
+                    as: 'at',
                     in: {
-                      _id: '$att._id',
-                      fullName: '$$att.fullName',
-                      email: '$$att.email',
-                      phoneNumber: '$$att.phoneNumber',
+                      _id: '$$at._id',
+                      fullName: '$$at.fullName',
+                      email: '$$at.email',
+                      phoneNumber: '$$at.phoneNumber',
                     },
                   },
                 },
@@ -173,12 +167,7 @@ const view = async (req, res) => {
                 },
               },
           },
-       },
-       {
-        $addFields: {
-          createdByName: '$users.username',
-        }
-      }, 
+       }
     ]);
 
     res.status(200).json(result[0]);
