@@ -72,7 +72,7 @@ const EmailHistory = React.lazy(() => import("views/admin/emailHistory"));
 const EmailHistoryView = React.lazy(() => import("views/admin/emailHistory/View"));
 
 const Meeting = React.lazy(() => import("views/admin/meeting"));
-const MettingView = React.lazy(() => import("views/admin/meeting/View"));
+const MeetingView = React.lazy(() => import("views/admin/meeting/View"));
 
 const PhoneCall = React.lazy(() => import("views/admin/phoneCall"));
 const PhoneCallView = React.lazy(() => import("views/admin/phoneCall/View"));
@@ -313,17 +313,17 @@ const routes = [
   {
     name: "Meetings",
     layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
-    path: "/metting",
+    path: "/meeting",
     icon: <Icon as={SiGooglemeet} width='20px' height='20px' color='inherit' />,
     component: Meeting,
   },
   {
-    name: "Meetings ",
+    name: "Meetings",
     layout: [ROLE_PATH.superAdmin, ROLE_PATH.user],
-    under: "Meetings",
+    under: "meetings",
     parentName: "Meetings",
-    path: "/metting/:id",
-    component: MettingView,
+    path: "/meeting/:id",
+    component: MeetingView,
   },
   // ------------- Phone Routes ------------------------
   {

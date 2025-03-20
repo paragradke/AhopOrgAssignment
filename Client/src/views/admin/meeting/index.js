@@ -43,7 +43,7 @@ const Index = () => {
                     <MenuList minW={'fit-content'} transform={"translate(1520px, 173px);"}>
 
                         {permission?.view && <MenuItem py={2.5} color={'green'}
-                            onClick={() => navigate(`/metting/${row?.values._id}`)}
+                            onClick={() => navigate(`/meeting/${row?.values._id}`)}
                             icon={<ViewIcon fontSize={15} />}>View</MenuItem>}
                         {permission?.delete && <MenuItem py={2.5} color={'red'} onClick={() => { setDeleteMany(true); setSelectedValues([row?.values?._id]); }} icon={<DeleteIcon fontSize={15} />}>Delete</MenuItem>}
                     </MenuList>
