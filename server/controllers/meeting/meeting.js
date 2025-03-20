@@ -144,11 +144,12 @@ const view = async (req, res) => {
                 else: {
                   $map: {
                     input: '$attendes',
-                    as: 'attendes',
+                    as: 'att',
                     in: {
-                      fullName: '$$attendes.fullName',
-                      email: '$$attendes.email',
-                      phoneNumber: '$$attendes.phoneNumber',
+                      _id: '$att._id',
+                      fullName: '$$att.fullName',
+                      email: '$$att.email',
+                      phoneNumber: '$$att.phoneNumber',
                     },
                   },
                 },
@@ -163,6 +164,7 @@ const view = async (req, res) => {
                       input: '$attendesLead',
                       as: 'al',
                       in: {
+                        _id: '$$al._id',
                         leadName: '$$al.leadName',
                         leadEmail: '$$al.leadEmail',
                       },
