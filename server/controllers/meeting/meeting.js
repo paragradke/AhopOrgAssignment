@@ -83,7 +83,6 @@ const index = async (req, res) => {
           createdByName: '$users.username',
         }
       },
-      { $project: { contact: 0, users: 0, Lead: 0 } },
     ]);
     logger.info(result);
     res.status(200).json(result);
@@ -106,7 +105,7 @@ const view = async (req, res) => {
             from: 'User',
             localField: 'createBy',
             foreignField: '_id',
-            as: 'users'
+            as: 'createBy'
         }
       },
       {
@@ -114,7 +113,7 @@ const view = async (req, res) => {
             from: 'Contact',
             localField: 'attendes',
             foreignField: '_id',
-            as: 'contact'
+            as: 'attendes'
         }
       },
       {
@@ -122,18 +121,62 @@ const view = async (req, res) => {
             from: 'Leads',
             localField: 'attendesLead',
             foreignField: '_id',
-            as: 'Lead'
+            as: 'attendesLead'
         }
       },
-      { $unwind: { path: '$contact', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$users', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$Lead', preserveNullAndEmptyArrays: true } },
-      {
+     // { $unwind: { path: '$attendes', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$createBy', preserveNullAndEmptyArrays: true } },
+     // { $unwind: { path: '$attendesLeads', preserveNullAndEmptyArrays: true } },
+      { $project: 
+        { 
+          agenda: 1,
+          location: 1,
+          createdByName: 1,
+          related: 1,
+          timestamp: 1,
+          dateTime: 1,
+          notes: 1,
+          createBy: 1, 
+          attendes: {
+              $cond: {
+                if: { $eq: [{ $size: '$attendes' }, 0] }, // Check if the array is empty
+                then: [], // Return an empty array
+                else: {
+                  $map: {
+                    input: '$attendes',
+                    as: 'attendes',
+                    in: {
+                      fullName: '$$attendes.fullName',
+                      email: '$$attendes.email',
+                      phoneNumber: '$$attendes.phoneNumber',
+                    },
+                  },
+                },
+              },
+            },
+            attendesLead: {
+                $cond: {
+                  if: { $eq: [{ $size: '$attendesLead' }, 0] }, // Check if the array is empty
+                  then: [], // Return an empty array
+                  else: {
+                    $map: {
+                      input: '$attendesLead',
+                      as: 'al',
+                      in: {
+                        leadName: '$$al.leadName',
+                        leadEmail: '$$al.leadEmail',
+                      },
+                    },
+                  },
+                },
+              },
+          },
+       },
+       {
         $addFields: {
           createdByName: '$users.username',
         }
-      },
-      { $project: { contact: 0, users: 0, Lead: 0 } },
+      }, 
     ]);
 
     res.status(200).json(result[0]);
