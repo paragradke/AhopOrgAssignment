@@ -11,6 +11,8 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { MeetingSchema } from 'schema';
 import { getApi, postApi } from 'services/api';
+//import { useDispatch } from 'react-redux';
+//import { fetchContactData } from '../../../../redux/slices/contactSlice';
 
 const AddMeeting = (props) => {
     const { onClose, isOpen, setAction, from, fetchData, view } = props
@@ -21,7 +23,7 @@ const AddMeeting = (props) => {
     const [leadModelOpen, setLeadModel] = useState(false);
     const todayTime = new Date().toISOString().split('.')[0];
     const leadData = useSelector((state) => state?.leadData?.data);
-
+    //const dispatch = useDispatch()
 
     const user = JSON.parse(localStorage.getItem('user'))
 
@@ -43,21 +45,42 @@ const AddMeeting = (props) => {
         initialValues: initialValues,
         validationSchema: MeetingSchema,
         onSubmit: (values, { resetForm }) => {
-            
+            AddData(); //TODO try to pass values as params
+            resetForm();
         },
     });
     const { errors, touched, values, handleBlur, handleChange, handleSubmit, setFieldValue } = formik
 
     const AddData = async () => {
-
+        try {
+            setIsLoding(true)
+            let response = await postApi('api/meeting/add', values);
+            if (response.status === 200) {
+                props.onClose();
+                props.setAction((pre) => !pre)
+            }
+        } catch (e) {
+            console.log(e);
+        }
+        finally {
+            setIsLoding(false)
+        }
     };
 
-    const fetchAllData = async () => {
-        
+    const fetchAllData = async (related) => {
+        console.log("fetch data called ", related);
+        let result = null;
+        if (related === "Contact") {
+            result = await getApi(user.role === 'superAdmin' ? 'api/contact/' : `api/contact/?createBy=${user._id}`)
+            setContactData(result?.data)
+        } else if (related === "Lead") {
+            result = await getApi(user.role === 'superAdmin' ? 'api/lead/' : `api/lead/?createBy=${user._id}`);
+            setLeadData(result?.data)
+        }
     }
 
     useEffect(() => {
-
+        fetchAllData(values.related);
     }, [props.id, values.related])
 
     const extractLabels = (selectedItems) => {
@@ -102,17 +125,27 @@ const AddMeeting = (props) => {
                             <FormLabel display='flex' ms='4px' fontSize='sm' fontWeight='500' mb='8px'>
                                 Related To<Text color={"red"}>*</Text>
                             </FormLabel>
-                            <RadioGroup onChange={(e) => setFieldValue('related', e)} value={values.related}>
+                            <RadioGroup onChange={(e) => {
+                                if (e === 'Contact') {
+                                    console.log(contactdata);
+                                    setContactModel(true);
+                                    setLeadModel(false)
+                                } else {
+                                    console.log(leadData);
+                                    setContactModel(false);
+                                    setLeadModel(true)
+                                }
+                                setFieldValue('related', e)
+                            }} value={values.related}>
                                 <Stack direction='row'>
                                     {props.leadContect === 'contactView' && <Radio value='Contact'>Contact</Radio>}
                                     {props.leadContect === 'leadView' && <Radio value='Lead'>Lead</Radio>}
-                                    {!props.leadContect && <> <Radio value='Contact'>Contact</Radio><Radio value='Lead'>Lead</Radio></>}
+                                    {!props.leadContect && <> <Radio value="Contact">Contact</Radio><Radio value="Lead">Lead</Radio></>}
                                 </Stack>
                             </RadioGroup>
                             <Text mb='10px' color={'red'} fontSize='sm'> {errors.related && touched.related && errors.related}</Text>
                         </GridItem>
-                        {(values.related === "Contact" ? (contactdata?.length ?? 0) > 0 : (leaddata?.length ?? 0) > 0) && values.related &&
-
+                        {(values.related  === "Contact" ? (contactdata?.length ?? 0) > 0 : (leaddata?.length ?? 0) > 0) && values.related &&
                             <GridItem colSpan={{ base: 12 }}>
                                 <Flex alignItems={'end'} justifyContent={'space-between'} >
                                     <Text w={'100%'} >
