@@ -11,8 +11,6 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { MeetingSchema } from 'schema';
 import { getApi, postApi } from 'services/api';
-//import { useDispatch } from 'react-redux';
-//import { fetchContactData } from '../../../../redux/slices/contactSlice';
 
 const AddMeeting = (props) => {
     const { onClose, isOpen, setAction, from, fetchData, view } = props
@@ -23,7 +21,6 @@ const AddMeeting = (props) => {
     const [leadModelOpen, setLeadModel] = useState(false);
     const todayTime = new Date().toISOString().split('.')[0];
     const leadData = useSelector((state) => state?.leadData?.data);
-    //const dispatch = useDispatch()
 
     const user = JSON.parse(localStorage.getItem('user'))
 
@@ -45,13 +42,13 @@ const AddMeeting = (props) => {
         initialValues: initialValues,
         validationSchema: MeetingSchema,
         onSubmit: (values, { resetForm }) => {
-            AddData(); //TODO try to pass values as params
+            AddData(values);
             resetForm();
         },
     });
     const { errors, touched, values, handleBlur, handleChange, handleSubmit, setFieldValue } = formik
 
-    const AddData = async () => {
+    const AddData = async (values) => {
         try {
             setIsLoding(true)
             let response = await postApi('api/meeting/add', values);
@@ -68,7 +65,6 @@ const AddMeeting = (props) => {
     };
 
     const fetchAllData = async (related) => {
-        console.log("fetch data called ", related);
         let result = null;
         if (related === "Contact") {
             result = await getApi(user.role === 'superAdmin' ? 'api/contact/' : `api/contact/?createBy=${user._id}`)
@@ -87,7 +83,7 @@ const AddMeeting = (props) => {
         return selectedItems.map((item) => item._id);
     };
 
-    const countriesWithEmailAsLabel = (values.related === "Contact" ? contactdata : leaddata)?.map((item) => ({
+    const getLabelForSelection = (values.related === "Contact" ? contactdata : leaddata)?.map((item) => ({
         ...item,
         value: item._id,
         label: values.related === "Contact" ? `${item.firstName} ${item.lastName}` : item.leadName,
@@ -153,9 +149,9 @@ const AddMeeting = (props) => {
                                             label={`Choose Preferred Attendes ${values.related === "Contact" ? "Contact" : values.related === "Lead" && "Lead"}`}
                                             placeholder="Type a Name"
                                             name="attendes"
-                                            items={countriesWithEmailAsLabel}
+                                            items={getLabelForSelection}
                                             className='custom-autoComplete'
-                                            selectedItems={countriesWithEmailAsLabel?.filter((item) => values.related === "Contact" ? values?.attendes.includes(item._id) : values.related === "Lead" && values?.attendesLead.includes(item._id))}
+                                            selectedItems={getLabelForSelection?.filter((item) => values.related === "Contact" ? values?.attendes.includes(item._id) : values.related === "Lead" && values?.attendesLead.includes(item._id))}
                                             onSelectedItemsChange={(changes) => {
                                                 const selectedLabels = extractLabels(changes.selectedItems);
                                                 values.related === "Contact" ? setFieldValue('attendes', selectedLabels) : values.related === "Lead" && setFieldValue('attendesLead', selectedLabels)

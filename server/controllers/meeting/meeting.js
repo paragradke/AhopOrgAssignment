@@ -38,7 +38,6 @@ const add = async (req, res) => {
 }
 
 const index = async (req, res) => {
-  logger.info('index route called for meeting');
   try {
     const query = req.query;
     query.deleted = false;
@@ -106,7 +105,7 @@ const view = async (req, res) => {
       },
       {
         $lookup: {
-            from: 'Contact',
+            from: 'Contacts',
             localField: 'attendes',
             foreignField: '_id',
             as: 'attendes'
@@ -144,6 +143,12 @@ const view = async (req, res) => {
                       fullName: '$$at.fullName',
                       email: '$$at.email',
                       phoneNumber: '$$at.phoneNumber',
+                      firstName: {
+                        $arrayElemAt: [{ $split: ['$$at.fullName', ' '] }, 0], // First part of fullName
+                      },
+                      lastName: {
+                        $arrayElemAt: [{ $split: ['$$at.fullName', ' '] }, 1],
+                      },
                     },
                   },
                 },
